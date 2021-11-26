@@ -17,11 +17,16 @@ int main(int argc, char* argv[]){
 	keypad(stdscr, TRUE);
 	refresh();
 
+	int height, width;
+	getmaxyx(stdscr, height, width);
+
 	SWMgr library(new MarkupFilterMgr(FMT_PLAIN));
-	ModMap::iterator it;
-	for (it = library.Modules.begin(); it != library.Modules.end(); it++) {
-		printw("[%s]\t - %s\n", (*it).second->getName(), (*it).second->getDescription());
-	}
+
+	SWModule *target = library.getModule("LEB");
+	target->setKey("gen 1:1");
+	target->renderText();
+
+	printw("%s\n %s", target->getKeyText(), (const char*)target->renderText());
 
 	getch();
 }
