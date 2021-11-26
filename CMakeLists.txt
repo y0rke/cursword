@@ -10,4 +10,15 @@ set(CURSES_NEED_NCURSES TRUE)
 set(CURSES_NEED_WIDE TRUE)
 find_package(Curses REQUIRED)
 
+target_include_directories(cursword
+	PRIVATE
+		/usr/include/sword
+)
+
+target_link_libraries(cursword
+	PRIVATE
+		${CURSES_LIBRARIES}
+		sword
+)
+
 add_subdirectory(src)
