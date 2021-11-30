@@ -1,6 +1,7 @@
 target_sources(cursword
 	PRIVATE
 		main.cpp
+		format_str.cpp
 )
 
 target_include_directories(cursword
