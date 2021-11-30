@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cctype>
 
-int fmt_strncat(char* dst, const char* src, int n){
+catstat fmt_strncat(char* dst, const char* src, int n){
 	int dst_len = strlen(dst);
 	int src_len = strlen(src);
 	int dst_i = dst_len;
@@ -20,5 +20,5 @@ int fmt_strncat(char* dst, const char* src, int n){
 
 	dst[dst_i] = '\0';
 
-	return count;
+	return catstat{src_i, count};//number of characters from src read and written 
 }

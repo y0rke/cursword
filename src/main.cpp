@@ -5,6 +5,7 @@
 #include <memory>
 #include <cstring>
 #include "format_text.h"
+#include <cstdio>
 
 using namespace sword;
 
@@ -33,14 +34,6 @@ int main(int argc, char* argv[]){
 	int buf_w = win_w - 1;
 	char buf[buf_h][buf_w];
 
-	/*
-	for(int i = 0; i < buf_h; i++){
-		for(int j = 0; j < buf_w; j++){
-			buf[i][j] = 'X';
-			if(j == buf_w - 1) buf[i][j] = 0;
-		}
-	}
-	*/
 	for(int i = 0; i < buf_h; i++){
 		buf[i][0] = 0;
 	}
@@ -49,9 +42,35 @@ int main(int argc, char* argv[]){
 	SWModule *leb = library.getModule("LEB");
 	leb->setKey("gen 1:1");
 
-	for(int i = 0; i < buf_h; i++){
-		fmt_strncat(buf[i], leb->stripText(), buf_w - 1);
-		(*leb)++;
+	int line = 0;
+	int verse_i = 0;
+	int space_left; 
+	int verse_len;
+	catstat stats;
+
+	while(line < buf_h){
+		const char* verse = leb->stripText();
+		space_left = buf_w - strlen(buf[line]) - 1;//- 1 reserves a space for null byte
+
+		stats = fmt_strncat(buf[line], &verse[verse_i], space_left);
+
+		verse_len = strlen(&verse[verse_i]);
+		if(stats.nwritten < space_left && stats.nread < verse_len){
+			verse_i += stats.nread;
+		}
+		else if(stats.nwritten < space_left && stats.nread == verse_len){
+			verse_i = 0;
+			(*leb)++;
+		}
+		else if(stats.nwritten == space_left && stats.nread < verse_len){
+			verse_i += stats.nread;
+			line++;
+		}
+		else{
+			verse_i = 0;
+			line++;
+			(*leb)++;
+		}
 	}
 
 	for(int i = 0; i < buf_h; i++){
