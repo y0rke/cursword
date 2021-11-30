@@ -1,12 +1,10 @@
-#include <cstdio>
 #include <ncurses.h>
 #include <clocale>
 #include <swmgr.h>
 #include <markupfiltmgr.h>
-#include <versekey.h>
 #include <memory>
 #include <cstring>
-#include "format_str.h"
+#include "format_text.h"
 
 using namespace sword;
 
@@ -22,61 +20,44 @@ int main(int argc, char* argv[]){
 	refresh();
 	//end
 
-	int height, width;
-	getmaxyx(stdscr, height, width);//not zero based
+	int stdscr_h, stdscr_w;
+	getmaxyx(stdscr, stdscr_h, stdscr_w);//not zero based
 
-	int view_h = height;
-	int view_w = width + 1;//+1 accounts for null byte in string
-	char view[view_h][view_w];
-	int top_line = 0;
+	int win_h = stdscr_h;
+	int win_w = stdscr_w / 2;
+	WINDOW *win = newwin(win_h, win_w, 0, win_w - win_w/2);
+	box(win, 0, 0);
 
-	for(int i = 0; i < view_h; i++){
-		view[i][0] = '\0';//init strings of size 0
+	//Account for box
+	int buf_h = win_h - 2;
+	int buf_w = win_w - 1;
+	char buf[buf_h][buf_w];
+
+	/*
+	for(int i = 0; i < buf_h; i++){
+		for(int j = 0; j < buf_w; j++){
+			buf[i][j] = 'X';
+			if(j == buf_w - 1) buf[i][j] = 0;
+		}
+	}
+	*/
+	for(int i = 0; i < buf_h; i++){
+		buf[i][0] = 0;
 	}
 
-	SWMgr library{};
+	SWMgr library{new MarkupFilterMgr{FMT_PLAIN}};
 	SWModule *leb = library.getModule("LEB");
 	leb->setKey("gen 1:1");
 
-	int line = 0;
-	int max_space = view_w - 1;//as prescribed in man strcat - leave room for null byte
-	int verse_index = 0;
-
-	while(line < view_h){
-		const char* verse = leb->stripText();
-
-		int line_space = max_space - strlen(view[line]);
-		int verse_len = strlen(&verse[verse_index]);
-		fmt_strncat(view[line], &verse[verse_index], line_space);
-
-		if(verse_len < line_space){
-			(*leb)++;
-			verse_index = 0;
-		}
-		else{
-			line++;
-			verse_index += verse_len - (verse_len - line_space);
-		}
+	for(int i = 0; i < buf_h; i++){
+		fmt_strncat(buf[i], leb->stripText(), buf_w - 1);
+		(*leb)++;
 	}
 
-	for(int i = 0; i < view_h; i++){
-		printw("%s", view[i]);
+	for(int i = 0; i < buf_h; i++){
+		mvwprintw(win, i + 1, 1, "%s", buf[i]);
 	}
-/*
-	const char* verse = leb->stripText();
-	int verse_len = strlen(verse);
+	wrefresh(win);
 
-	char line[strlen(verse)];
-
-	int line_len = 0;
-	for(int i = 0; i < verse_len; i++){
-		if(verse[i] != '\n'){
-			line[line_len] = verse[i];
-			line_len++;
-		}
-	}
-
-	printw("%s", line);
-	*/
 	getch();
 }
