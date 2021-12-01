@@ -5,5 +5,4 @@ struct catstat{
 	int nwritten;
 };
 
-catstat fmt_strncat(char* dst, const char* src, int n);
-//int wide_strlen(wchar_t* str);
+catstat fmt_strncat(wchar_t* dst, const wchar_t* src, int n);

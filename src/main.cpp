@@ -4,8 +4,9 @@
 #include <markupfiltmgr.h>
 #include <memory>
 #include <cstring>
+#include <string>
+#include <utilstr.h>
 #include "format_text.h"
-#include <cstdio>
 
 using namespace sword;
 
@@ -32,7 +33,7 @@ int main(int argc, char* argv[]){
 	//Account for box
 	int buf_h = win_h - 2;
 	int buf_w = win_w - 1;
-	char buf[buf_h][buf_w];
+	wchar_t buf[buf_h][buf_w];
 
 	for(int i = 0; i < buf_h; i++){
 		buf[i][0] = 0;
@@ -47,20 +48,24 @@ int main(int argc, char* argv[]){
 	int space_left; 
 	int verse_len;
 	catstat stats;
+	wchar_t* verse;
+
+	SWBuf verse_buf = utf8ToWChar(leb->renderText());
 
 	while(line < buf_h){
-		const char* verse = leb->stripText();
-		space_left = buf_w - strlen(buf[line]) - 1;//- 1 reserves a space for null byte
+		verse = (wchar_t*)(verse_buf.getRawData());
+		verse_len = wcslen(&verse[verse_i]);
 
+		space_left = buf_w - wcslen(buf[line]) - 1;//- 1 reserves a space for null byte
 		stats = fmt_strncat(buf[line], &verse[verse_i], space_left);
 
-		verse_len = strlen(&verse[verse_i]);
 		if(stats.nwritten < space_left && stats.nread < verse_len){
 			verse_i += stats.nread;
 		}
 		else if(stats.nwritten < space_left && stats.nread == verse_len){
 			verse_i = 0;
 			(*leb)++;
+			verse_buf = utf8ToWChar(leb->renderText());
 		}
 		else if(stats.nwritten == space_left && stats.nread < verse_len){
 			verse_i += stats.nread;
@@ -70,12 +75,14 @@ int main(int argc, char* argv[]){
 			verse_i = 0;
 			line++;
 			(*leb)++;
+			verse_buf = utf8ToWChar(leb->renderText());
 		}
 	}
 
 	for(int i = 0; i < buf_h; i++){
-		mvwprintw(win, i + 1, 1, "%s", buf[i]);
+		mvwprintw(win, i + 1, 1, "%ls", buf[i]);
 	}
+
 	wrefresh(win);
 
 	getch();
