@@ -1,6 +1,7 @@
 target_sources(cursword
 	PRIVATE
 		main.cpp
+		session.cpp
 		format_text.cpp
 )
 
