@@ -1,8 +1,8 @@
 target_sources(cursword
 	PRIVATE
 		main.cpp
-		session.cpp
 		format_text.cpp
+		bible.cpp
 )
 
 target_include_directories(cursword

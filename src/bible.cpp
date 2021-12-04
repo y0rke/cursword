@@ -1,8 +1,7 @@
-#include "session.h"
-#include <cwchar>
+#include "bible.h"
 #include "format_text.h"
 
-void init_displaybuffer(DisplayBuf* buf, SWModule* module){
+void write_to_bible_buf(DisplayBuf* buf, SWModule* bib){
 	for(int i = 0; i < buf->height; i++){
 		*(buf->data + i * buf->width) = L'\0';
 	}
@@ -14,7 +13,7 @@ void init_displaybuffer(DisplayBuf* buf, SWModule* module){
 	catstat stats;
 	wchar_t* verse;
 
-	SWBuf verse_buf = utf8ToWChar(module->renderText());
+	SWBuf verse_buf = utf8ToWChar(bib->renderText());
 
 	//Write to the display buffer
 	while(line < buf->height){
@@ -32,8 +31,8 @@ void init_displaybuffer(DisplayBuf* buf, SWModule* module){
 				line++;
 			}
 
-			(*module)++;
-			verse_buf = utf8ToWChar(module->renderText());
+			(*bib)++;
+			verse_buf = utf8ToWChar(bib->renderText());
 			verse_i = 0;
 		}
 		else if(stats.nwritten == space_left && stats.nread < verse_len){
@@ -43,8 +42,8 @@ void init_displaybuffer(DisplayBuf* buf, SWModule* module){
 		else{
 			verse_i = 0;
 			line++;
-			(*module)++;
-			verse_buf = utf8ToWChar(module->renderText());
+			(*bib)++;
+			verse_buf = utf8ToWChar(bib->renderText());
 		}
 	}
 }

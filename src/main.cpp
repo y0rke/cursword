@@ -5,8 +5,10 @@
 #include <memory>
 #include <cstring>
 #include <utilstr.h>
-#include "session.h"
+#include <versekey.h>
 #include "format_text.h"
+#include "display.h"
+#include "bible.h"
 
 using namespace sword;
 
@@ -16,37 +18,54 @@ int main(int argc, char* argv[]){
 	initscr();
 	start_color();
 	cbreak();
+	clear();
 	noecho();
 	curs_set(0);
-	keypad(stdscr, TRUE);
 	refresh();
 	//end
 
+	//int display
 	int stdscr_h, stdscr_w;
 	getmaxyx(stdscr, stdscr_h, stdscr_w);//not zero based
 
-	int win_h = stdscr_h;
-	int win_w = stdscr_w / 2;
-	WINDOW *win = newwin(win_h, win_w, 0, win_w - win_w/2);
-	box(win, 0, 0);
+	BibleDisplay bibdp{};
+	bibdp.height = stdscr_h; 
+	bibdp.width = stdscr_w / 2;
+	bibdp.win = newwin(bibdp.height, bibdp.width, 0, bibdp.width - bibdp.width/2);
+	keypad(bibdp.win, TRUE);
+	box(bibdp.win, 0, 0);
 
-	//Account for box
-	int buf_h = win_h - 2;
-	int buf_w = win_w - 1;
-	wchar_t buf[buf_h][buf_w];
+	bibdp.buf.height = bibdp.height - 2;//Account for box
+	bibdp.buf.width = bibdp.width - 1;//- 1 to leave space for the null byte
+	bibdp.buf.top = 0;
+	wchar_t _buf[bibdp.buf.height][bibdp.buf.width];
+	bibdp.buf.data = (wchar_t*)_buf;
+	//end
 
 	SWMgr library{new MarkupFilterMgr{FMT_PLAIN}};
 	SWModule *bible = library.getModule("LEB");
+	VerseKey key{};
 	bible->setKey("gen 1:1");
 
-	init_displaybuffer((wchar_t*)buf, buf_h, buf_w, bible);
+	write_to_bible_buf(&bibdp.buf, bible);
+	
+	bool is_running = true;
 
-	//Display the buffer
-	for(int i = 0; i < buf_h; i++){
-		mvwprintw(win, i + 1, 1, "%ls", buf[i]);
+	while(is_running){
+		//Display the buffer
+		for(int i = 0; i < bibdp.buf.height; i++){
+			mvwprintw(bibdp.win, i + 1, 1, "%ls", (bibdp.buf.data + i * bibdp.buf.width));
+		}
+
+		wrefresh(bibdp.win);
+
+		switch(getch()){
+			case 'q':
+				is_running = false;
+				break;
+			case 'k':
+			case 'j':
+			default: is_running = false;
+		}
 	}
-
-	wrefresh(win);
-
-	getch();
 }
