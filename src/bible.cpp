@@ -2,8 +2,9 @@
 #include "format_text.h"
 
 void write_to_bible_buf(DisplayBuf* buf, SWModule* bib){
+	wchar_t stack_buf[buf->height][buf->width];
 	for(int i = 0; i < buf->height; i++){
-		*(buf->data + i * buf->width) = L'\0';
+		stack_buf[i][0] = L'\0';
 	}
 
 	int line = 0;
@@ -15,17 +16,17 @@ void write_to_bible_buf(DisplayBuf* buf, SWModule* bib){
 
 	SWBuf verse_buf = utf8ToWChar(bib->renderText());
 
-	//Write to the display buffer
+	//Write to the stack buffer
 	while(line < buf->height){
 		verse = (wchar_t*)(verse_buf.getRawData());
 		verse_len = wcslen(&verse[verse_i]);
 
-		space_left = buf->width - wcslen(buf->data + line * buf->width) - 1;//- 1 reserves a space for null byte
-		stats = fmt_strncat(buf->data + line * buf->width, &verse[verse_i], space_left);
+		space_left = buf->width - wcslen(stack_buf[line]) - 1;//- 1 reserves a space for null byte
+		stats = fmt_strncat(stack_buf[line], &verse[verse_i], space_left);
 
 		if(stats.nwritten < space_left && stats.nread == verse_len){
 			if(if_eosentence(verse[verse_i + verse_len - 1]) && (space_left - stats.nwritten) > 2){
-				wcscat(buf->data + line * buf->width, L"  ");//Add double space
+				wcscat(stack_buf[line], L"  ");//Add double space
 			}
 			else if(verse[verse_i + verse_len - 1] == L'\n'){
 				line++;
@@ -44,6 +45,13 @@ void write_to_bible_buf(DisplayBuf* buf, SWModule* bib){
 			line++;
 			(*bib)++;
 			verse_buf = utf8ToWChar(bib->renderText());
+		}
+	}
+
+	//Flush the stack buffer to the display buffer
+	for(int i = 0; i < buf->height; i++){
+		for(int j = 0; j < buf->width; j++){
+			*((buf->data + i * buf->width) + j) = stack_buf[i][j];
 		}
 	}
 }
