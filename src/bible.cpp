@@ -1,7 +1,8 @@
 #include "bible.h"
+#include <string>
 #include "format_text.h"
 
-void write_to_bible_buf(DisplayBuf* buf, SWModule* bib){
+void write_to_bible_dpbuf(DisplayBuf* buf, SWModule* bib){
 	wchar_t stack_buf[buf->height][buf->width];
 	for(int i = 0; i < buf->height; i++){
 		stack_buf[i][0] = L'\0';
@@ -54,4 +55,16 @@ void write_to_bible_buf(DisplayBuf* buf, SWModule* bib){
 			*((buf->data + i * buf->width) + j) = stack_buf[i][j];
 		}
 	}
+}
+
+Verse* get_verse_buffer(SWModule* bib, std::string key = "gen 1:1"){
+	return nullptr;
+}
+
+void present_bible_dp(BibleDisplay* bibdp){
+	for(int i = 0; i < bibdp->buf.height; i++){
+		mvwprintw(bibdp->win, i + 1, 1, "%ls", (bibdp->buf.data + i * bibdp->buf.width));
+	}
+
+	wrefresh(bibdp->win);
 }

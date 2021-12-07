@@ -1,6 +1,7 @@
 #pragma once
 #include "display.h"
 #include <swmodule.h>
+#include <versekey.h>
 
 using namespace sword;
 
@@ -24,4 +25,10 @@ struct BibleDisplay : Display{
 	KeyBounds bounds;
 };
 
-void write_to_bible_buf(DisplayBuf* buf, SWModule* bib);
+struct Verse{
+	VerseKey key;
+	SWBuf text;
+};
+
+void write_to_bible_dpbuf(DisplayBuf* buf, SWModule* bib);
+void present_bible_dp(BibleDisplay* bibdp);

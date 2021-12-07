@@ -44,16 +44,12 @@ int main(int argc, char* argv[]){
 	SWModule *bible = library.getModule("LEB");
 	bible->setKey("gen 1:1");
 
-	write_to_bible_buf(&bibdp.buf, bible);
+	write_to_bible_dpbuf(&bibdp.buf, bible);
 	
 	bool is_running = true;
 	while(is_running){
 		//Display the buffer
-		for(int i = 0; i < bibdp.buf.height; i++){
-			mvwprintw(bibdp.win, i + 1, 1, "%ls", (bibdp.buf.data + i * bibdp.buf.width));
-		}
-
-		wrefresh(bibdp.win);
+		present_bible_dp(&bibdp);
 
 		switch(getch()){
 			case 'q':
