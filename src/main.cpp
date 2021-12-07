@@ -42,10 +42,9 @@ int main(int argc, char* argv[]){
 
 	SWMgr library{new MarkupFilterMgr{FMT_PLAIN}};
 	SWModule *bible = library.getModule("LEB");
-	bible->setKey("gen 1:1");
 
-	write_to_bible_dpbuf(&bibdp.buf, bible);
-	
+	int err = set_bibdpbuf_to_verse_context(&bibdp.buf, bible, "gen 1:1");
+
 	bool is_running = true;
 	while(is_running){
 		//Display the buffer

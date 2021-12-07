@@ -68,3 +68,25 @@ void present_bible_dp(BibleDisplay* bibdp){
 
 	wrefresh(bibdp->win);
 }
+
+int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string txtKey, int lineNo){
+	int err = bib->setKey(txtKey.c_str());
+	if(err != 0) return err;
+	if(lineNo < 0 || lineNo >= dpbuf->height) return 256;//2^sizeof(char)
+
+	int topLine = 0;
+	int bottomLine = dpbuf->height - 1;
+
+	SWBuf verse = utf8ToWChar(bib->renderText());
+	wchar_t (*buf)[dpbuf->width] = (wchar_t (*)[dpbuf->width]) dpbuf->data;//Arcane, but useful
+
+	for(int i = 0; i < dpbuf->height; i++){
+		buf[i][0] = 0;
+	}
+
+	int space_left = dpbuf->width - wcslen(buf[lineNo]) - 1;
+
+	wcsncat(buf[lineNo], (wchar_t*)verse.getRawData(), space_left);
+
+	return 0;
+};
