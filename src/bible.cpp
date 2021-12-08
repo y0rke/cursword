@@ -90,3 +90,20 @@ int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string 
 
 	return 0;
 };
+
+int init_bibdp(BibleDisplay* bibdp, int stdscr_h, int stdscr_w){
+	bibdp->height = stdscr_h; 
+	bibdp->width = stdscr_w / 2;
+	bibdp->win = newwin(bibdp->height, bibdp->width, 0, bibdp->width - bibdp->width/2);
+
+	if(bibdp->win == NULL) return -1;
+
+	keypad(bibdp->win, TRUE);
+	box(bibdp->win, 0, 0);
+	bibdp->buf.height = bibdp->height - 2;//Account for box
+	bibdp->buf.width = bibdp->width - 1;//- 1 to leave space for the null byte
+	bibdp->buf.top = 0;
+	bibdp->buf.data = (wchar_t*)calloc(bibdp->buf.height * bibdp->buf.width, sizeof(wchar_t));
+
+	return 0;
+}

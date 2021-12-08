@@ -34,3 +34,4 @@ struct Verse{
 void write_to_bible_dpbuf(DisplayBuf* buf, SWModule* bib);
 void present_bible_dp(BibleDisplay* bibdp);
 int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string txtKey, int lineNo = 0);
+int init_bibdp(BibleDisplay* bibdp, int stdscr_h, int stdscr_w);

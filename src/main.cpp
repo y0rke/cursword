@@ -29,21 +29,14 @@ int main(int argc, char* argv[]){
 
 	//init display
 	BibleDisplay bibdp{};
-	bibdp.height = stdscr_h; 
-	bibdp.width = stdscr_w / 2;
-	bibdp.win = newwin(bibdp.height, bibdp.width, 0, bibdp.width - bibdp.width/2);
-	keypad(bibdp.win, TRUE);
-	box(bibdp.win, 0, 0);
-	bibdp.buf.height = bibdp.height - 2;//Account for box
-	bibdp.buf.width = bibdp.width - 1;//- 1 to leave space for the null byte
-	bibdp.buf.top = 0;
-	bibdp.buf.data = (wchar_t*)calloc(bibdp.buf.height * bibdp.buf.width, sizeof(wchar_t));
+	init_bibdp(&bibdp, stdscr_h, stdscr_w);
 	//end
 
 	SWMgr library{new MarkupFilterMgr{FMT_PLAIN}};
 	SWModule *bible = library.getModule("LEB");
 
 	int err = set_bibdpbuf_to_verse_context(&bibdp.buf, bible, "gen 1:1");
+	if(err != 0) exit(EXIT_FAILURE);
 
 	bool is_running = true;
 	while(is_running){
