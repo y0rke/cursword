@@ -15,3 +15,5 @@ struct Display{
 	WINDOW* win;
 	DisplayBuf buf;
 };
+
+int init_stdscr(int* stdscr_h, int* stdscr_w);

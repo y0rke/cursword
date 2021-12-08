@@ -1,6 +1,9 @@
 #include "bible.h"
 #include <string>
-#include "format_text.h"
+#include "txtutils.h"
+
+static const std::string gen_1_1 = "gen 1:1";
+static const std::string rev_22_21 = "rev 22:21";
 
 void write_to_bible_dpbuf(DisplayBuf* buf, SWModule* bib){
 	wchar_t stack_buf[buf->height][buf->width];
@@ -70,31 +73,80 @@ void present_bible_dp(BibleDisplay* bibdp){
 }
 
 int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string txtKey, int lineNo){
-	int err = bib->setKey(txtKey.c_str());
+	VerseKey verse_key{txtKey.c_str()};
+	/*
+	verse_key.setLowerBound(gen_1_1.c_str());
+	verse_key.setUpperBound(rev_22_21.c_str());
+	VerseKey lowerBound = verse_key.getLowerBound();
+	VerseKey upperBound = verse_key.getUpperBound();
+	*/
+
+	int err = bib->setKey(verse_key);
 	if(err != 0) return err;
-	if(lineNo < 0 || lineNo >= dpbuf->height) return 256;//2^sizeof(char)
+	if(lineNo < 0 || lineNo >= dpbuf->height) return -1;
 
-	int topLine = 0;
-	int bottomLine = dpbuf->height - 1;
+	int top_line = 0;
+	int bottom_line = dpbuf->height - 1;
 
-	SWBuf verse = utf8ToWChar(bib->renderText());
 	wchar_t (*buf)[dpbuf->width] = (wchar_t (*)[dpbuf->width]) dpbuf->data;//Arcane, but useful
 
 	for(int i = 0; i < dpbuf->height; i++){
-		buf[i][0] = 0;
+		buf[i][0] = L'\0';//Clear buffer
 	}
 
-	int space_left = dpbuf->width - wcslen(buf[lineNo]) - 1;
+	SWBuf verse_buf = utf8ToWChar(bib->renderText());
+	wchar_t* verse = (wchar_t*)verse_buf.getRawData();
+	int verse_index = 0;
+	int verse_len = wcslen(verse);
+	int space = dpbuf->width - 1;
+	catstat stat;
+	int up_line = lineNo;//Traverses up the buffer
+	int down_line = lineNo;//Traverses down the buffer
 
-	wcsncat(buf[lineNo], (wchar_t*)verse.getRawData(), space_left);
+	do{
+		stat = fmt_strncat(buf[down_line], &verse[verse_index], space);
+		verse_index += stat.nread;
+		if(stat.nwritten == space && verse_index < verse_len){
+			down_line++;
+		}
+	}while(verse_index < verse_len);
+	verse_index = 0;
+
+	up_line--;
+	down_line++;
+
+	while(up_line >= top_line){//&& !lowerBound.equals(*((*bib)--).getKey())){
+		(*bib)--;
+		verse_buf = utf8ToWChar(bib->renderText());
+		verse = (wchar_t*)verse_buf.getRawData();
+		verse_len = fmtd_strlen(verse);
+
+		if(verse_len > space){
+			int remainder = verse_len % space;
+			verse_index = verse_len - remainder;
+
+			while(up_line >= top_line && verse_index >= 0){
+				stat = fmt_strncat(buf[up_line], &verse[verse_index], space);
+				up_line--;
+				verse_index -= space;
+			}
+
+			verse_index = 0;
+		}
+		else{
+			stat = fmt_strncat(buf[up_line], verse, space);
+		}
+
+		up_line--;
+	}
 
 	return 0;
 };
 
-int init_bibdp(BibleDisplay* bibdp, int stdscr_h, int stdscr_w){
-	bibdp->height = stdscr_h; 
-	bibdp->width = stdscr_w / 2;
-	bibdp->win = newwin(bibdp->height, bibdp->width, 0, bibdp->width - bibdp->width/2);
+int init_bibdp(BibleDisplay* bibdp, int height, int width, int start_y, int start_x){
+	bibdp->height = height; 
+	bibdp->width = width;
+	bibdp->win = newwin(bibdp->height, bibdp->width, start_y, start_x);
 
 	if(bibdp->win == NULL) return -1;
 

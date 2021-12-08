@@ -7,7 +7,6 @@
 #include <utilstr.h>
 #include <versekey.h>
 #include <cstdlib>
-#include "format_text.h"
 #include "display.h"
 #include "bible.h"
 
@@ -15,27 +14,19 @@ using namespace sword;
 
 int main(int argc, char* argv[]){
 	//ncurses init
-	setlocale(LC_ALL, "");
-	initscr();
-	start_color();
-	cbreak();
-	clear();
-	noecho();
-	curs_set(0);
-	refresh();
 	int stdscr_h, stdscr_w;
-	getmaxyx(stdscr, stdscr_h, stdscr_w);//not zero based
+	init_stdscr(&stdscr_h, &stdscr_w);
 	//end
 
 	//init display
 	BibleDisplay bibdp{};
-	init_bibdp(&bibdp, stdscr_h, stdscr_w);
+	init_bibdp(&bibdp, stdscr_h, stdscr_w/2, 0, stdscr_w/4);
 	//end
 
 	SWMgr library{new MarkupFilterMgr{FMT_PLAIN}};
 	SWModule *bible = library.getModule("LEB");
 
-	int err = set_bibdpbuf_to_verse_context(&bibdp.buf, bible, "gen 1:1");
+	int err = set_bibdpbuf_to_verse_context(&bibdp.buf, bible, "gen 1:2", 2);
 	if(err != 0) exit(EXIT_FAILURE);
 
 	bool is_running = true;
