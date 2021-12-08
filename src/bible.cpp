@@ -74,12 +74,6 @@ void present_bible_dp(BibleDisplay* bibdp){
 
 int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string txtKey, int lineNo){
 	VerseKey verse_key{txtKey.c_str()};
-	/*
-	verse_key.setLowerBound(gen_1_1.c_str());
-	verse_key.setUpperBound(rev_22_21.c_str());
-	VerseKey lowerBound = verse_key.getLowerBound();
-	VerseKey upperBound = verse_key.getUpperBound();
-	*/
 
 	int err = bib->setKey(verse_key);
 	if(err != 0) return err;
@@ -103,6 +97,7 @@ int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string 
 	int up_line = lineNo;//Traverses up the buffer
 	int down_line = lineNo;//Traverses down the buffer
 
+	//Print requested verse
 	do{
 		stat = fmt_strncat(buf[down_line], &verse[verse_index], space);
 		verse_index += stat.nread;
@@ -110,16 +105,15 @@ int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string 
 			down_line++;
 		}
 	}while(verse_index < verse_len);
-	verse_index = 0;
 
 	up_line--;
-	down_line++;
-
-	while(up_line >= top_line){//&& !lowerBound.equals(*((*bib)--).getKey())){
-		(*bib)--;
+	//Print all preceding verses
+	while(up_line >= top_line && !verse_key.equals(*(((*bib)--).getKey()))){
+		verse_key = *bib->getKey();
 		verse_buf = utf8ToWChar(bib->renderText());
 		verse = (wchar_t*)verse_buf.getRawData();
 		verse_len = fmtd_strlen(verse);
+		verse_index = 0;
 
 		if(verse_len > space){
 			int remainder = verse_len % space;
@@ -130,14 +124,34 @@ int set_bibdpbuf_to_verse_context(DisplayBuf* dpbuf, SWModule* bib, std::string 
 				up_line--;
 				verse_index -= space;
 			}
-
-			verse_index = 0;
 		}
 		else{
 			stat = fmt_strncat(buf[up_line], verse, space);
+			up_line--;
 		}
+	}
 
-		up_line--;
+	down_line++;
+	verse_key = VerseKey{txtKey.c_str()};
+	//Print all following verses
+	while(down_line <= bottom_line && !verse_key.equals(*(((*bib)++).getKey()))){
+		verse_key = *bib->getKey();
+		verse_buf = utf8ToWChar(bib->renderText());
+		verse = (wchar_t*)verse_buf.getRawData();
+		verse_len = fmtd_strlen(verse);
+		verse_index = 0;
+
+		while(verse_len > space && down_line <= bottom_line){
+			stat = fmt_strncat(buf[down_line], &verse[verse_index], space);
+			verse_index += stat.nread;
+			verse_len = fmtd_strlen(&verse[verse_index]);
+			down_line++;
+		}
+		
+		if(down_line <= bottom_line){
+			stat = fmt_strncat(buf[down_line], &verse[verse_index], space);
+			down_line++;
+		}
 	}
 
 	return 0;

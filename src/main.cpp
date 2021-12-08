@@ -13,6 +13,15 @@
 using namespace sword;
 
 int main(int argc, char* argv[]){
+	std::string txt_key = "gen 1:1";
+	int line = 0;
+	if(argc >= 2){
+		txt_key = argv[1];
+	}
+	if(argc == 3){
+		line = atoi(argv[2]);
+	}
+
 	//ncurses init
 	int stdscr_h, stdscr_w;
 	init_stdscr(&stdscr_h, &stdscr_w);
@@ -26,7 +35,7 @@ int main(int argc, char* argv[]){
 	SWMgr library{new MarkupFilterMgr{FMT_PLAIN}};
 	SWModule *bible = library.getModule("LEB");
 
-	int err = set_bibdpbuf_to_verse_context(&bibdp.buf, bible, "gen 1:2", 2);
+	int err = set_bibdpbuf_to_verse_context(&bibdp.buf, bible, txt_key, line);
 	if(err != 0) exit(EXIT_FAILURE);
 
 	bool is_running = true;
